@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/upload-color-style.css">
+
+    <title> Apply Colors</title>
+    
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+    <main class="container">
+        <div class="upload-form">
+
+    <form class="upload-form" action="/upload-colors" method="POST" enctype="multipart/form-data">
+        <h1>Upload colors</h1>
+        <% if (successMessage) { %>
+            <p><%= successMessage %></p>
+        <% } %>
+        <span for="modelId">Choose a 3D Model:</span>
+        <select id="modelId" name="modelId">
+            <% models.forEach(model => { %>
+                <option value="<%= model.model_name %>"><%= model.model_name %></option>
+            <% }); %>
+        </select>
+        <br>
+        <input type="hidden" id="selectedPart" name="selectedPart">
+        <span for="parts">Select a Part:</span>
+        <select id="parts" name="parts">
+        </select>
+        <br>
+        <span for="colors">Choose Colors:</span>
+        <div id="colorOptions">
+        </div>
+        <br>
+        <input type="hidden" id="selectedColors" name="selectedColors">
+        <button type="submit">Apply Color</button>
+    </form>
+</div>
+
+</main>
+
+    <hr>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script>
+    <script src="/MTLLoader.js"></script>
+    <script src="/OBJLoader.js"></script>
+    <script>
+        function getPartsFromModel(modelPath) {
+            return new Promise((resolve, reject) => {
+                const loader = new THREE.OBJLoader();
+            
+                loader.load(modelPath, function(object) {
+                    const parts = []; 
+            
+                    object.traverse((child) => {
+                        if (child.isMesh) {
+                            if (child.name) {
+                                parts.push(child.name);
+                            }
+                        }
+                    });
+            
+                    resolve(parts);
+                }, undefined, reject);
+            });
+        }
+        
+        const modelDropdown = document.getElementById('modelId');
+        const partsDropdown = document.getElementById('parts');
+        const selectedPartInput = document.getElementById('selectedPart');
+        const colorOptions = document.getElementById('colorOptions');
+        const selectedColorsInput = document.getElementById('selectedColors');
+
+        colorOptions.addEventListener('click', (event) => {
+            if (event.target.classList.contains('color-option')) {
+                event.target.classList.toggle('color-selected');
+                updateSelectedColors();
+            }
+        });
+
+        function updateSelectedColors() {
+            const selectedColorElements = Array.from(colorOptions.getElementsByClassName('color-selected'));
+            const selectedColors = selectedColorElements.map(element => element.getAttribute('data-color'));
+            selectedColorsInput.value = JSON.stringify(selectedColors);
+        }
+           const colorNames = ['red', 'blue', 'black', 'white', 'purple'];
+        const colorOptionsContainer = document.getElementById('colorOptions');
+        colorNames.forEach(colorName => {
+            const colorOption = document.createElement('div');
+            colorOption.className = 'color-option';
+            colorOption.style.backgroundColor = colorName;
+            colorOption.setAttribute('data-color', colorName);
+            colorOptionsContainer.appendChild(colorOption);
+        });
+        modelDropdown.addEventListener('change', () => {
+            const selectedModelName = modelDropdown.value;
+        
+            const modelPath = './public/objmodels/' + selectedModelName + '.obj';
+        
+            partsDropdown.innerHTML = '';
+        
+            getPartsFromModel(modelPath)
+                .then(parts => {
+                    parts.forEach(part => {
+                        const option = document.createElement('option');
+                        option.value = part;
+                        option.textContent = part;
+                        partsDropdown.appendChild(option);
+                    });
+
+                    if (parts.length > 0) {
+                        selectedPartInput.value = parts[0];
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+        
+        partsDropdown.addEventListener('change', () => {
+            selectedPartInput.value = partsDropdown.value;
+        });
+        
+    </script>
+</body>
+</html>

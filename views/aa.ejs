@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.138.0/build/three.module.js",
+                "OrbitControls": "https://unpkg.com/three@0.138.0/examples/jsm/controls/OrbitControls.js",
+                "MTLLoader": "https://unpkg.com/three@0.138.0/examples/jsm/loaders/MTLLoader.js",
+                "GLTFLoader": "https://unpkg.com/three@0.138.0/examples/jsm/loaders/GLTFLoader.js"
+            }
+        }
+    </script>
+    <head lang="en">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <title>Model and Textures Viewer</title>
+        <style>
+            #container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+                margin-top: 20px;
+                display: flex;
+            }
+
+            #textureList {
+                flex: 1;
+                margin-right: 20px;
+            }
+
+            .texture-part {
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin-bottom: 10px;
+                background-color: white;
+                border-radius: 8px;
+            }
+            .texture-part hr {
+                margin: 10px 0;
+            }
+
+            #container {
+                position: fixed;
+                max-width: 50%;
+                top: 149px;
+                left: 0px;
+                transform-origin: top left;
+            }
+
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f5f5f5;
+            }
+            canvas {
+                display: block;
+                position: fixed;
+                max-width: 48%;
+                max-height: 48%;
+                top: 10px;
+                right:0;
+                margin-top: 160px; 
+                transform-origin: top right;
+            }
+            #header {
+                background-color: #007bff;
+                color: white;
+                text-align: center;
+                padding: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="header">
+            <%- include('navbar.ejs') %>
+            <h1>Model and Textures Viewer</h1>
+        </div>
+        <div id="container">
+            <ul id="textureList">
+                <% for (const texturePart in texturePaths) { %>
+                    <li class="texture-part">
+                        <strong>Texture Part: <%= texturePart %></strong>
+                        <% texturePaths[texturePart].forEach((texturePath) => { %>
+                            <img class="texture-image" src="<%= texturePath %>" alt="Texture Image" data-texture-part="<%= texturePart %>" style="max-width: 100px; max-height: 100px;">
+                        <% }); %>
+                    </li>
+                    <hr> 
+                <% } %>
+            </ul>
+            <div id="tempFileData" data-file='<%- JSON.stringify(tempFile) %>'></div>
+            <div id="textures"></div> 
+            <div id="modelContainer"></div> 
+            <div id="colorSelections">
+                <h2>Color Selections</h2>
+                <% for (const colorInfo of Colors) { %>
+                    <h3>Texture Part: <%= colorInfo.color_part %></h3>
+                    
+                    <select class="color-select" data-color-info='<%= JSON.stringify(colorInfo) %>'>
+                        <option value="">Select Color</option>
+                        <% for (const key in colorInfo) { %>
+                            <% if (key !== 'color_part' && colorInfo[key]) { %>
+                                <option value="<%= key %>"><%= key %></option>
+                            <% } %>
+                        <% } %>
+                    </select>
+                    <div class="part-texture" id="texture-for-part-<%= colorInfo.color_part %>"></div>
+                <% } %>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script>
+        <script src="/MTLLoader.js"></script>
+        <script src="/OBJLoader.js"></script>
+        <canvas> <script type="module" src="load.js"></script></canvas>
+       
+    </body>
+</html>
